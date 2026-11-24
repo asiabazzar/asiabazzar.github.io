@@ -367,6 +367,9 @@ body.go .hcard{animation:zoomin .8s cubic-bezier(.2,.9,.3,1.1) both}
 .bar .search{position:relative;z-index:1;background-color:#fff;border-color:#d9eed9;box-shadow:0 6px 16px rgba(46,125,50,.08)}
 .bar .search:focus{border-color:var(--g);box-shadow:0 0 0 4px rgba(76,175,80,.16),0 6px 16px rgba(46,125,50,.1)}
 @media(max-width:760px){.bar .wrap{margin:0 12px;padding:14px 14px 14px 18px!important;border-radius:20px}.bic{width:42px;height:42px;font-size:21px;border-radius:13px}.ttlw{gap:11px}}
+/* tags: NEW + offer can show together */
+.tgs{position:absolute;top:12px;left:12px;display:flex;flex-direction:column;align-items:flex-start;gap:5px;z-index:2}.tgs .tag{position:static}
+@media(max-width:820px){.tgs{position:static;flex-direction:row;flex-wrap:wrap;gap:4px}.tgs .tag{margin-top:4px}}
 </style></head><body class="pre">
 <div id="intro" aria-hidden="true"><span class="ring"></span><span class="ring b"></span><span class="pop" style="--x:-150px;--y:-120px;--r:-15deg;animation-delay:0.5s">🥬</span><span class="pop" style="--x:150px;--y:-130px;--r:12deg;animation-delay:0.6s">🍅</span><span class="pop" style="--x:-170px;--y:40px;--r:-10deg;animation-delay:0.7s">🍗</span><span class="pop" style="--x:170px;--y:50px;--r:20deg;animation-delay:0.8s">🥕</span><span class="pop" style="--x:-90px;--y:150px;--r:8deg;animation-delay:0.9s">🧅</span><span class="pop" style="--x:100px;--y:150px;--r:-20deg;animation-delay:1.0s">🌶️</span><span class="pop" style="--x:0px;--y:-185px;--r:0deg;animation-delay:0.75s">🥩</span>
 <div class="bk">🧺</div><div class="nm"><span class="a" style="animation-delay:0.55s">A</span><span class="a" style="animation-delay:0.61s">s</span><span class="a" style="animation-delay:0.67s">i</span><span class="a" style="animation-delay:0.73s">a</span><span class="z" style="animation-delay:0.79s">B</span><span class="z" style="animation-delay:0.85s">a</span><span class="z" style="animation-delay:0.91s">z</span><span class="z" style="animation-delay:0.97s">a</span><span class="z" style="animation-delay:1.03s">a</span><span class="z" style="animation-delay:1.09s">r</span></div><div class="tg">CAFÉ &amp; GROCERY</div><div class="bar2"><i></i></div><div class="skip">TAP TO SKIP</div></div>
@@ -417,6 +420,7 @@ body.go .hcard{animation:zoomin .8s cubic-bezier(.2,.9,.3,1.1) both}
    Paste your "Publish to web" CSV link between the quotes.
    Leave empty to use the prices written below. */
 document.addEventListener('error',e=>{const t=e.target;if(t.tagName==='IMG'&&!t.dataset.fb){t.dataset.fb=1;t.src='img/logo.webp';t.style.objectFit='contain';t.style.background='#f4faf3';t.style.padding='18px'}},true);
+const isNew=i=>/\bnew\b/i.test(i.deal||'');const offTag=i=>String(i.deal||'').replace(/\bnew\b/ig,'').replace(/^[\s,+&|\/-]+|[\s,+&|\/-]+$/g,'').trim();
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQGaUyyz1DTVF6pG6faTS_bmPSjJmIkkGOdkEI11dAXjLjCnnyvZYKScxTl6Y0WUeZzQokNMAA7B3vS/pub?gid=1343680154&single=true&output=csv";
 /* ===== BACKUP PRICES (used if no sheet link) ===== */
 const UPDATED = "Nov 21, 2026";
@@ -1102,9 +1106,9 @@ function mpHTML(){const its=mostPicked();if(!its.length)return '';
  <div class="mtrack"><div class="mrow" style="--dur:${Math.max(24,its.length*4.5)}s">${one}${one}</div></div></section>`}
 let SP='off';
 function render(){const s=q.value.trim().toLowerCase();let h='',c='',n=0,k=0;
- const isNew=i=>/new/i.test(i.deal||'');const offers=[],news=[];DATA[tab].forEach(x=>x.items.forEach(i=>{if(isNew(i))news.push(i);else if(i.deal||i.old)offers.push(i)}));
+ const offers=[],news=[];DATA[tab].forEach(x=>x.items.forEach(i=>{if(isNew(i))news.push(i);if(offTag(i)||i.old)offers.push(i)}));
  const secs=DATA[tab];
- const cardH=(i,sec)=>`<article class="card"><div class="ph"><img src="${pic(i)}" alt="${esc(i.n)}" loading="lazy"></div>${i.deal||sec.frozen||i.old?`<span class="tag${isNew(i)?' nw':''}">${esc(isNew(i)?'✨ NEW':(i.deal||(i.old?'SALE':'Frozen')))}</span>`:''}
+ const cardH=(i,sec)=>`<article class="card"><div class="ph"><img src="${pic(i)}" alt="${esc(i.n)}" loading="lazy"></div>${isNew(i)||offTag(i)||sec.frozen||i.old?`<div class="tgs">${isNew(i)?'<span class="tag nw">✨ NEW</span>':''}${offTag(i)||i.old?`<span class="tag">${esc(offTag(i)||'SALE')}</span>`:(!isNew(i)&&sec.frozen?'<span class="tag">Frozen</span>':'')}</div>`:''}
    <div class="info"><div><div class="nm">${esc(i.n)}</div><div class="sb">${esc(i.s)}</div></div>
    <div class="prow"><div class="pr">${i.old?`<s>${esc(i.old)}</s>`:''}<b>${esc(i.p)}</b><span>${esc(i.u)}</span></div></div></div></article>`;
  if(!s&&(offers.length||news.length)){if(!offers.length)SP='new';if(!news.length)SP='off';
@@ -1121,7 +1125,7 @@ function render(){const s=q.value.trim().toLowerCase();let h='',c='',n=0,k=0;
   its.map(i=>cardH(i,sec)).join('')+'</div></section>';}
  if(tab=='veg'&&!s){h=mpHTML()+h;c=`<a class="circ" href="#s-most-picked"><div class="im"><img src="${pic(mostPicked()[0]||{})}" alt=""></div><p>⭐ Most Picked</p></a>`+c}
  list.innerHTML=h;circles.innerHTML=c;empty.style.display=n?'none':'block';$('#count').textContent=(tab=='veg'?'🥬 Vegetable & fruit':'🥩 Meat & chicken')+' prices updated daily';
- if(innerWidth<=820)list.querySelectorAll('.card').forEach(x=>{const t=x.querySelector('.tag');if(t)x.querySelector('.info>div').appendChild(t)});
+ if(innerWidth<=820)list.querySelectorAll('.card').forEach(x=>{const t=x.querySelector('.tgs');if(t)x.querySelector('.info>div').appendChild(t)});
  list.querySelectorAll('.stabs button').forEach(b=>b.onclick=()=>{SP=b.dataset.sp;const st=b.parentElement;st.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));st.dataset.on=SP;
   list.querySelectorAll('.spane').forEach(p=>{const on=p.dataset.p===SP;p.classList.toggle('on',on);if(on)p.querySelectorAll('.card').forEach((c,i)=>{c.classList.remove('in');void c.offsetWidth;c.style.transitionDelay=(i*50)+'ms';c.classList.add('in')})})});
  list.querySelectorAll('.stabs').forEach(st=>st.dataset.on=SP);
